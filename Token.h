@@ -1,20 +1,33 @@
 #include <iostream>
 #pragma once
-class Token 
+class Token
 {
 public:
-	Token(std::string pvalue, unsigned int ptype) 
+	Token()
+	{
+		
+	}
+	Token(std::string pvalue, unsigned int ptype)
 	{
 		value = pvalue;
 		type = ptype;
 	}
+
 	enum types
 	{
-		nonterminal, // <word> 
+		nonterminal, // <word>
 		terminal, // word
 		equal, // =
-		undefined, // ` 
-		command // some command
+		undefined, // `
+		command, // some command
+		root_nonterminal,
+		end,
+		or_,
+		pointer,
+		derives, // -> 
+		lookahead_symbol
+
 	};
+
 	std::string value ; unsigned int type ;
 };

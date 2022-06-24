@@ -7,21 +7,27 @@
 #include "Root Nonterminal.h"
 const char* Token_Types[] =
 {
-	"nonterminal", // <word> 
+	"nonterminal", // <word>
 	"terminal", // word
 	"equal", // =
 	"undefined", //
 	"command"
 };
 
-class Lexer 
+class Lexer
 {
 
 public:
 	Lexer(const std::string &path)
 	{
-		data = get_data(path); 
+		data = get_data(path);
 	}
+
+	std::vector<RootNonterminal> get_source()
+	{
+		return stack;
+	}
+
 	bool execute_command(std::string command)
 	{
 		std::string new_command;
@@ -54,7 +60,7 @@ public:
 			}
 		}
 		else if (new_command == "end")
-			return true; 
+			return true;
 		else {
 			return false;
 		}
@@ -63,10 +69,10 @@ public:
 	void start()
 	{
 		std::string nonterminal_word;
-		std::string terminal_word; 
-		std::string command_word; 
+		std::string terminal_word;
+		std::string command_word;
 		bool root_nonterminal = false;
-		bool lex_command = false; 
+		bool lex_command = false;
 		unsigned int nonterminal_pos = 0;
 		unsigned int command_pos = 0;
 		for (pos; pos < data.size(); pos++)
@@ -89,7 +95,7 @@ public:
 
 			if (data[pos] == '<') {
 				nonterminal_word = data[pos];
-				nonterminal = true; 
+				nonterminal = true;
 				nonterminal_pos = pos + 1;
 			}
 			else if (data[pos] == ':' && pos < (data.size() - 2))
@@ -110,13 +116,13 @@ public:
 					lex_command = true;
 					command_pos = pos+2;
 					do
-					{ 
+					{
 						command_word = command_word + data[command_pos];
-						command_pos++; 
+						command_pos++;
 						if (data[command_pos] == '\n' || command_pos == (data.size() - 1))
 						{
 							if (command_pos == (data.size() -1 ))
-								command_word = command_word + data[command_pos]; 
+								command_word = command_word + data[command_pos];
 							execute_command(command_word);
 							Tokens.push_back(Token(command_word, Token::command));
 
@@ -127,7 +133,7 @@ public:
 
 					} while (lex_command);
 				}
-				else 
+				else
 				{
 					Tokens.push_back(Token("-", Token::terminal));
 				}
@@ -139,7 +145,7 @@ public:
 				}
 				if (pos == (data.size()))
 					terminal_word = terminal_word + data[pos];
-				else 
+				else
 				{
 					if ((int)terminal_word[0] != 0)
 					{
@@ -154,23 +160,26 @@ public:
 			{
 				if (pos < (Tokens.size() - 1) && Tokens[pos + 1].type == Token::equal)
 				{
-					unsigned int root_pos = pos + 2; 
+					unsigned int root_pos = pos + 2;
 					root_nonterminal = true;
 					RootNonterminal x(std::vector<Token>(), Tokens[pos].value);
-					do 
+					x.productions.push_back(Token(Tokens[pos].value, Token::root_nonterminal));
+					x.productions.push_back(Token("::=", Token::equal));
+					do
 					{
 						root_pos++;
 						if (Tokens[root_pos].type == Token::terminal || Tokens[root_pos].type == Token::nonterminal)
-							x.productions.push_back(Tokens[root_pos]); 
+							x.productions.push_back(Tokens[root_pos]);
 						if (Tokens[root_pos].type == Token::command)
 						{
 							if (execute_command(Tokens[root_pos].value)) {
+								x.productions.push_back(Token("end", Token::end)); 
 								root_nonterminal = false;
 									break;
 							}
 						}
-					} while (root_nonterminal); 
-					stack.push_back(x); 
+					} while (root_nonterminal);
+					stack.push_back(x);
 				}
 
 			}
@@ -179,18 +188,18 @@ public:
 		/*for (unsigned int i = 0; i < stack.size(); i++)
 		{
 			std::cout << stack[i].name << std::endl; std::cout << "\n";
-		
 			for (unsigned int b = 0; b < stack[i].productions.size(); b++)
 			{
 				std::cout << stack[i].productions[b].value << std::endl;
 			}
-		} */
+			}
+		*/ 
 	}
 private:
-	std::string data; 
+	std::string data;
 	unsigned int pos = 0;
-	bool nonterminal = false; 
-	bool terminal = false; 
+	bool nonterminal = false;
+	bool terminal = false;
 	std::vector<Token>Tokens;
 	std::vector<RootNonterminal>stack;
 	std::string get_data(const std::string& path)

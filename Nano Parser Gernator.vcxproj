@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Lexer.h" />
+    <ClInclude Include="Parser.h" />
     <ClInclude Include="Root Nonterminal.h" />
     <ClInclude Include="Token.h" />
   </ItemGroup>

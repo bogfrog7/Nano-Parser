@@ -1,4 +1,4 @@
 ﻿  main.cpp
-C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Lexer.h(28,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Lexer.h(62): warning C4715: 'Lexer::execute_command': not all control paths return a value
+C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Lexer.h(34,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Lexer.h(68): warning C4715: 'Lexer::execute_command': not all control paths return a value
   Nano Parser Gernator.vcxproj -> C:\Users\iharb\source\repos\Nano Parser Gernator\Debug\Nano Parser Gernator.exe

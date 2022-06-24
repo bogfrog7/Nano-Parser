@@ -1,3 +1,2 @@
-<paren> ::= ( <paren>) | ( ) -- end 
--- print -> nano.nonterminals
-<list> ::= [ < list> ] | [ <paren> ] | [ ] -- end 
+<paren> ::= ( <paren> ) | ( ) -- end
+<list> ::= [ <list> ] | [ <paren> ] | [ ] -- end
