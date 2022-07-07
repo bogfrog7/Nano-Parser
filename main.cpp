@@ -9,5 +9,5 @@ int main(char** argv, int argc)
     lexer.start();
 
     Parser parser(lexer.get_source());
-    parser.run(); 
+    parser.run();
 }

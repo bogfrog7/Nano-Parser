@@ -5,6 +5,8 @@
 #include <vector>
 #include "Token.h"
 #include "Root Nonterminal.h"
+#include "utils.h"
+
 const char* Token_Types[] =
 {
 	"nonterminal", // <word>
@@ -62,6 +64,7 @@ public:
 		else if (new_command == "end")
 			return true;
 		else {
+			raise_error(COMMAND_NOT_FOUND, new_command, line, source);
 			return false;
 		}
 
@@ -75,6 +78,7 @@ public:
 		bool lex_command = false;
 		unsigned int nonterminal_pos = 0;
 		unsigned int command_pos = 0;
+	
 		for (pos; pos < data.size(); pos++)
 		{
 			do
@@ -121,6 +125,7 @@ public:
 						command_pos++;
 						if (data[command_pos] == '\n' || command_pos == (data.size() - 1))
 						{
+							line++; 
 							if (command_pos == (data.size() -1 ))
 								command_word = command_word + data[command_pos];
 							execute_command(command_word);
@@ -202,8 +207,12 @@ private:
 	bool terminal = false;
 	std::vector<Token>Tokens;
 	std::vector<RootNonterminal>stack;
+	unsigned int line = 0;
+	std::string source;
+
 	std::string get_data(const std::string& path)
 	{
+		source = path;
 		std::ifstream input_file(path);
 		if (!input_file.is_open()) {
 			std::cerr << "Could not open the file - '"
