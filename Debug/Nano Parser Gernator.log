@@ -1,4 +1,7 @@
 ﻿  main.cpp
 C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Lexer.h(36,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Lexer.h(71): warning C4715: 'Lexer::execute_command': not all control paths return a value
-  Nano Parser Gernator.vcxproj -> C:\Users\iharb\source\repos\Nano Parser Gernator\Debug\Nano Parser Gernator.exe
+C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Parser.h(68,25): error C2143: syntax error: missing ';' before 'for'
+C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Parser.h(81,31): error C2039: 'push_back': is not a member of 'LR1Item'
+C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\LR1Item.h(6): message : see declaration of 'LR1Item'
+C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Parser.h(101,29): error C2065: 'temp_productions': undeclared identifier
+C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Parser.h(87,38): warning C4390: ';': empty controlled statement found; is this the intent?

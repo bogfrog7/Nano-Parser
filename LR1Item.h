@@ -21,6 +21,14 @@ class LR1Item
         look_ahead_list = p_look_ahead_list;
     }
 
+    void add_production(std::vector<Token>productions)
+    {
+        for (unsigned int x = 0; x < productions.size(); x++)
+        {
+            production.push_back(productions[x]);
+        }
+    }
+
     unsigned int pointer_pos;
     unsigned int list_id;
     std::vector<Token>production;

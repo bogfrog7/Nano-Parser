@@ -25,8 +25,9 @@ public:
 
     bool nonterminal_exists(std::string obj) // -> checks the nonterminal_name_stack to see if that nonterminal exists
     {
-        for ( unsigned int xx = 0; xx < nonterminal_name_stack.size();)
+        for ( unsigned int xx = 0; xx < nonterminal_name_stack.size(); xx++)
         {
+            //std::cout << obj << std::endl;
             if (obj == nonterminal_name_stack[xx])
             {
                 return true;
@@ -43,7 +44,7 @@ public:
         {
             for ( auto const& table : Lookahead_list[i] )
             {
-                if ( table.first ==  nonterminal_set.look_ahead)
+                if ( table.first ==  nonterminal_set.derive)
                 {
                     temp_lookahead.push_back(table.second);
                 }
@@ -55,16 +56,52 @@ public:
         {
             if ( nonterminal_set.production[i].type == Token::nonterminal && nonterminal_set.derive != nonterminal_set.production[i].value)
             {
-                // look it up
+                std::cout << "true" << std::endl;
+                bool found = false;
+
+                for ( unsigned int a = 0; a < CC_list.size(); a++)
+                {
+                    if ( CC_list[a].derive == nonterminal_set.derive)
+                    {
+                        found = true;
+                        std::vector<std::string>temp_temp_lookahead; // note: shitty name
+
+                        for (unsigned int i = 0; i < Lookahead_list.size(); i++)
+                                {
+                                    for ( auto const& table : Lookahead_list[i] )
+                                    {
+                                        if ( table.first ==  CC_list[a].derive)
+                                        {
+                                            temp_temp_lookahead.push_back(table.second);
+                                        }
+
+                                    }
+                                }
+
+                        LR1Item temp1(CC_list[a].derive, CC_list[a].production, ":list", nonterminal_id, CC_list[a].pointer_pos+1);
+                        temp1.add_lookahead_list(temp_temp_lookahead);
+
+                        temp_temp_lookahead.clear();
+
+                        Temp_CC_list.push_back(temp1);
+                    }
+                    if ( not found ) ;
+                        // do something
+                }
+
             }
         }
         unsigned int new_pointer_pos = nonterminal_set.pointer_pos + 1 ;
-        if (not nonterminal_exists(nonterminal_set.derive)){
+        if (nonterminal_exists(nonterminal_set.derive) == false)
+        //
+        {
             nonterminal_id++;
             nonterminal_name_stack.push_back(nonterminal_set.derive);
         }
         LR1Item temp(nonterminal_set.derive, nonterminal_set.production, ":list", nonterminal_id, new_pointer_pos);
         temp.add_lookahead_list(temp_lookahead);
+
+        Temp_CC_list.push_back(temp);
 
     }
     void goto_()
@@ -77,6 +114,24 @@ public:
     void build_CC_list()
     {
         goto_();
+        // debug
+        for  ( unsigned int vvx = 0; vvx < Temp_CC_list.size(); vvx++)
+        {
+            CC_list.push_back(Temp_CC_list[vvx]); 
+        }
+        for ( unsigned int xx = 0; xx < CC_list.size(); xx++ )
+        {
+            std::cout << "id = " << CC_list[xx].list_id << std::endl;
+            std::cout << "pointer pos = " << CC_list[xx].pointer_pos << std::endl;
+            std::cout << "productions = \n";
+            for (unsigned int p = 0; p < CC_list[xx].production.size(); p++)
+            {
+                std::cout << CC_list[xx].production[p].value  << std::endl;
+            }
+            std::cout << "\n" << std::endl;
+
+
+        }
     }
     bool check_symbol(std::string symbol,unsigned int id_)
     {
@@ -204,7 +259,7 @@ public:
             }
             std::cout << "\n";
         } */
-        build_CC_list(); 
+        build_CC_list();
     }
 
 private:
@@ -215,6 +270,7 @@ private:
     std::vector<unsigned int> FoundSymbols_id;
 
     std::vector<LR1Item>CC_list; 
+    std::vector<LR1Item>Temp_CC_list; // provides temporary shelter for the CC_list's new members such as CC1 CC2 etc..
     unsigned int pos = 0;
 
 };
