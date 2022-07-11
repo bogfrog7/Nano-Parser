@@ -39,29 +39,34 @@ public:
     void build_nonterminal(LR1Item nonterminal_set)
     {
         std::vector<std::string>temp_lookahead; // temporary lookahead stack
+        bool finished = false;
+        unsigned int this_iter = 0;
         // set apropriate lookahead symbol for each single nonterminal set
+        if (nonterminal_exists(nonterminal_set.derive))
+        {
+            this_iter++;
+        }
         for (unsigned int i = 0; i < Lookahead_list.size(); i ++)
         {
-            for ( auto const& table : Lookahead_list[i] )
+            for ( auto const& table : Lookahead_list[i])
             {
-                if ( table.first ==  nonterminal_set.derive)
+                if (table.first == nonterminal_set.derive)
                 {
                     temp_lookahead.push_back(table.second);
                 }
-
             }
         }
 
-        for (unsigned int i = 0; i < nonterminal_set.production.size(); i ++)
+        for (unsigned int i = 0; i < nonterminal_set.production.size(); i++)
         {
-            if ( nonterminal_set.production[i].type == Token::nonterminal && nonterminal_set.derive != nonterminal_set.production[i].value)
+            if (nonterminal_set.production[i].type == Token::nonterminal && nonterminal_set.derive != nonterminal_set.production[i].value)
             {
-                std::cout << "true" << std::endl;
                 bool found = false;
+                std::string nonterminal_value = nonterminal_set.production[i].value;
 
-                for ( unsigned int a = 0; a < CC_list.size(); a++)
+                for (unsigned int a = 0; a < CC_list.size(); a++)
                 {
-                    if ( CC_list[a].derive == nonterminal_set.derive)
+                    if ( CC_list[a].derive == nonterminal_value)
                     {
                         found = true;
                         std::vector<std::string>temp_temp_lookahead; // note: shitty name
@@ -70,7 +75,7 @@ public:
                                 {
                                     for ( auto const& table : Lookahead_list[i] )
                                     {
-                                        if ( table.first ==  CC_list[a].derive)
+                                        if (table.first ==  CC_list[a].derive)
                                         {
                                             temp_temp_lookahead.push_back(table.second);
                                         }
@@ -97,6 +102,7 @@ public:
         {
             nonterminal_id++;
             nonterminal_name_stack.push_back(nonterminal_set.derive);
+            this_iter = 0;
         }
         LR1Item temp(nonterminal_set.derive, nonterminal_set.production, ":list", nonterminal_id, new_pointer_pos);
         temp.add_lookahead_list(temp_lookahead);
@@ -115,14 +121,35 @@ public:
     {
         goto_();
         // debug
-        for  ( unsigned int vvx = 0; vvx < Temp_CC_list.size(); vvx++)
+        for  (unsigned int vvx = 0; vvx < Temp_CC_list.size(); vvx++)
         {
-            CC_list.push_back(Temp_CC_list[vvx]); 
+            CC_list.push_back(Temp_CC_list[vvx]);
         }
+        for ( unsigned int xy = 0; xy < Lookahead_list.size(); xy++)
+        {
+            for (auto const& table: Lookahead_list[xy])
+            {
+                std::cout << table.first << "=" << table.second << std::endl;
+            }
+        }
+        std::cout << "\n";
         for ( unsigned int xx = 0; xx < CC_list.size(); xx++ )
         {
+            std::cout << "parent = " << CC_list[xx].derive << std::endl;
             std::cout << "id = " << CC_list[xx].list_id << std::endl;
             std::cout << "pointer pos = " << CC_list[xx].pointer_pos << std::endl;
+            if (CC_list[xx].look_ahead == ":list")
+            {
+                std::cout << "lookahead list = \n";
+                for (unsigned int l = 0; l < CC_list[xx].look_ahead_list.size(); l++)
+                {
+                    std::cout << CC_list[xx].look_ahead_list[l] << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "lookahead symbol = " << CC_list[xx].look_ahead << std::endl;
+            }
             std::cout << "productions = \n";
             for (unsigned int p = 0; p < CC_list[xx].production.size(); p++)
             {
@@ -147,20 +174,29 @@ public:
     {
         
         bool run = false; 
+        unsigned int index_numb = 1;
         for (pos; pos < stack.size(); pos++)
         {
             for (unsigned int production_pos = 0; production_pos < stack[pos].productions.size(); production_pos++)
             {
+                if (nonterminal_exists(stack[pos].name))
+                    index_numb++;
+                else
+                    index_numb = 1;
                 if (stack[pos].productions[production_pos].type == Token::terminal && not run) {
                     run = true;
+                    std::string index_numb_str = std::to_string(index_numb);
                     std::map<std::string, std::string> temp_list =
                     {
-                        {stack[pos].name, stack[pos].productions[production_pos].value}
+                        {stack[pos].name, stack[pos].productions[production_pos].value+" "+index_numb_str}
                     };
                     Lookahead_list.push_back(temp_list); 
+                    nonterminal_name_stack.push_back(stack[pos].name);
                 }
                 do
                 {
+                    if (stack[pos].productions[production_pos].type == Token::terminal)
+                        run = false;
                     if (stack[pos].productions[production_pos].value == "|")
                         run = false;
                     else if (stack[pos].productions[production_pos].type == Token::end) {
@@ -171,6 +207,7 @@ public:
                 } while (run);
             }
         }
+        nonterminal_name_stack.clear();
         pos = 0; // reset for next function (run) 
     }
     bool is_not_space(char character)
