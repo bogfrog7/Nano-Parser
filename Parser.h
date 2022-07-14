@@ -52,7 +52,9 @@ public:
             {
                 if (table.first == nonterminal_set.derive)
                 {
-                    temp_lookahead.push_back(table.second);
+                    if ((char)this_iter == table.second.back()){
+                        temp_lookahead.push_back(table.second);
+                    }
                 }
             }
         }
@@ -179,10 +181,6 @@ public:
         {
             for (unsigned int production_pos = 0; production_pos < stack[pos].productions.size(); production_pos++)
             {
-                if (nonterminal_exists(stack[pos].name))
-                    index_numb++;
-                else
-                    index_numb = 1;
                 if (stack[pos].productions[production_pos].type == Token::terminal && not run) {
                     run = true;
                     std::string index_numb_str = std::to_string(index_numb);
@@ -191,16 +189,25 @@ public:
                         {stack[pos].name, stack[pos].productions[production_pos].value+" "+index_numb_str}
                     };
                     Lookahead_list.push_back(temp_list); 
-                    nonterminal_name_stack.push_back(stack[pos].name);
+                    if (nonterminal_exists(stack[pos].name))
+                         index_numb++;
+                    else{
+                        nonterminal_name_stack.push_back(stack[pos].name);
+                        index_numb++;
+                    }
                 }
                 do
                 {
+                    if (stack[pos].productions[production_pos+1].value == "|" || stack[pos].productions[production_pos+1].type == Token::end) 
+                    {
+                        index_numb = 1;
+                    }
                     if (stack[pos].productions[production_pos].type == Token::terminal)
                         run = false;
                     if (stack[pos].productions[production_pos].value == "|")
-                        run = false;
+                        run=false;
                     else if (stack[pos].productions[production_pos].type == Token::end) {
-                        run = false;
+                        run=false;
                     }
                     else
                         production_pos++;

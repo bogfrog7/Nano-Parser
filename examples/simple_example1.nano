@@ -1,2 +1,2 @@
-<paren> ::= ( <paren> ) | [ ] -- end
-<list> ::= [ <list> ] | [ <paren> ] -- end 
+<paren> ::= ( <paren> ) | [ <emp> ] -- end
+<list> ::= [ <list> ] | ( <emp> ) -- end 
