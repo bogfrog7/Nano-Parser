@@ -22,7 +22,7 @@ public:
 
     }
     unsigned int nonterminal_id = 0;
-
+    unsigned int last_nonterminal_id = 0;
     bool nonterminal_exists(std::string obj) // -> checks the nonterminal_name_stack to see if that nonterminal exists
     {
         for ( unsigned int xx = 0; xx < nonterminal_name_stack.size(); xx++)
@@ -41,6 +41,7 @@ public:
         std::vector<std::string>temp_lookahead; // temporary lookahead stack
         bool finished = false;
         unsigned int this_iter = 0;
+        unsigned int new_pointer_pos_t = nonterminal_set.pointer_pos+1;
         // set apropriate lookahead symbol for each single nonterminal set
         if (nonterminal_exists(nonterminal_set.derive))
         {
@@ -52,11 +53,18 @@ public:
             {
                 if (table.first == nonterminal_set.derive)
                 {
-                    if ((char)this_iter == table.second.back()){
+                    if ('0' + new_pointer_pos_t == (int)table.second.back())
+                    {
                         temp_lookahead.push_back(table.second);
                     }
                 }
             }
+        }
+        if ( nonterminal_exists(nonterminal_set.derive) == false ) // checks if the nonterminal is already 'registered'
+        {
+            nonterminal_id++;
+            nonterminal_name_stack.push_back(nonterminal_set.derive);
+            this_iter = 0;
         }
 
         for (unsigned int i = 0; i < nonterminal_set.production.size(); i++)
@@ -71,6 +79,9 @@ public:
                     if ( CC_list[a].derive == nonterminal_value)
                     {
                         found = true;
+                        bool appendable = false;
+                        unsigned int _iter_ = 0;
+                        unsigned int temp_nonterminal_id = nonterminal_id;
                         std::vector<std::string>temp_temp_lookahead; // note: shitty name
 
                         for (unsigned int i = 0; i < Lookahead_list.size(); i++)
@@ -79,38 +90,38 @@ public:
                                     {
                                         if (table.first ==  CC_list[a].derive)
                                         {
-                                            temp_temp_lookahead.push_back(table.second);
+                                                if ((int)table.second.back() == '0' + new_pointer_pos_t)
+                                                {
+                                                _iter_++;
+                                                temp_temp_lookahead.push_back(table.second);
+                                                appendable = true;
+                                                }
                                         }
 
                                     }
                                 }
-
+                        std::cout << last_nonterminal_id << std::endl;
                         LR1Item temp1(CC_list[a].derive, CC_list[a].production, ":list", nonterminal_id, CC_list[a].pointer_pos+1);
                         temp1.add_lookahead_list(temp_temp_lookahead);
 
                         temp_temp_lookahead.clear();
-
+                        if (appendable)
+                        {
                         Temp_CC_list.push_back(temp1);
+                        }
                     }
                     if ( not found ) ;
-                        // do something
+                        report_error();
                 }
 
             }
         }
         unsigned int new_pointer_pos = nonterminal_set.pointer_pos + 1 ;
-        if (nonterminal_exists(nonterminal_set.derive) == false)
-        //
-        {
-            nonterminal_id++;
-            nonterminal_name_stack.push_back(nonterminal_set.derive);
-            this_iter = 0;
-        }
         LR1Item temp(nonterminal_set.derive, nonterminal_set.production, ":list", nonterminal_id, new_pointer_pos);
         temp.add_lookahead_list(temp_lookahead);
 
         Temp_CC_list.push_back(temp);
-
+        last_nonterminal_id = nonterminal_id;
     }
     void goto_()
     {

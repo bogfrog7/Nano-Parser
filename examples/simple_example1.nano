@@ -1,2 +1,5 @@
-<paren> ::= ( <paren> ) | [ <emp> ] -- end
-<list> ::= [ <list> ] | ( <emp> ) -- end 
+<paren> ::= ( <paren> ) | ( <emp> ) -- end
+<list> ::= [ <list> ] | [ <emp> ] -- end
+
+<expr> ::=  <paren> | <list> | <emp> -- end
+<expr2> ::= <paren> + <list> -- end

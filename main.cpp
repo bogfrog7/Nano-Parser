@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Lexer.h"
 #include "Parser.h"
+#include "utils.h"
 
 int main(char** argv, int argc)
 {
@@ -10,4 +11,5 @@ int main(char** argv, int argc)
 
     Parser parser(lexer.get_source());
     parser.run();
+    print_errors();
 }
