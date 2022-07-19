@@ -1,5 +1,3 @@
-<paren> ::= ( <paren> ) | ( <emp> ) -- end
-<list> ::= [ <list> ] | [ <emp> ] -- end
+#define <emp> " "
 
-<expr> ::=  <paren> | <list> | <emp> -- end
-<expr2> ::= <paren> + <list> -- end
+<function_call> ::= [()] | [<name>()] -- end

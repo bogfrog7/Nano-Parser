@@ -1,5 +1,4 @@
 ﻿  main.cpp
 C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Lexer.h(36,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Parser.h(114,38): warning C4390: ';': empty controlled statement found; is this the intent?
 C:\Users\iharb\source\repos\Nano Parser Gernator\Nano Parser Gernator\Lexer.h(71): warning C4715: 'Lexer::execute_command': not all control paths return a value
   Nano Parser Gernator.vcxproj -> C:\Users\iharb\source\repos\Nano Parser Gernator\Debug\Nano Parser Gernator.exe

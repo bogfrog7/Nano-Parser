@@ -12,6 +12,11 @@
  *
  *
  * */
+// TODO One production is not beign added to the CC list 
+static unsigned int nonterminal_id = 0; // used for both iterations
+static unsigned int last_nonterminal_id = 0; // used for both iterations
+static unsigned int last_pointer_pos = 0; // used for the second iteration
+static unsigned int pointer_pos_counter = 0; // used for the second iteration
 
 class Parser
 {
@@ -21,8 +26,6 @@ public:
     {
 
     }
-    unsigned int nonterminal_id = 0;
-    unsigned int last_nonterminal_id = 0;
     bool nonterminal_exists(std::string obj) // -> checks the nonterminal_name_stack to see if that nonterminal exists
     {
         for ( unsigned int xx = 0; xx < nonterminal_name_stack.size(); xx++)
@@ -36,12 +39,33 @@ public:
         return false;
 
     }
-    void build_nonterminal(LR1Item nonterminal_set)
+    void build_nonterminal(LR1Item nonterminal_set, bool from_source)
     {
+        /* Explanation:
+         * Consider the following nonterminal set a->*b | * [ b ] with a pointer pos of some signed integer w, ( represented as * )
+         * Since the pointer pos is w, we need to increment the w so that it is exactly w+1 and we need to assign a 'label' which is
+         * also a signed integer that represents the CC(I) list format. The label will be assigned to the collection. The collection
+         * is currently [a->*b,s] and [[ *b,s]] (two differnet collections with the same label). For each production P, If P containts a nonterminal S with a lookahead symbol s
+         * then all of S's productions will be cast into collections and labeled with the same label.
+         *
+         * Example:
+         * input : build_nonterminal(<c>::=*<a>|[ ]) (<a> ::= *b)
+         * output: (<c>::=<a>*, label=1, lookahead=b), (<a> ::= b*, label=1, lookahead=b), [<c>::= [* ], label=1, lookahead = [ )
+         * 
+         * Params:
+         * from_source -> if true, builds from existing nonterminal_id paramater such as last_nonterminal_id
+         * nonterminal_set -> nonterminal_set::LR1Item
+         * */
         std::vector<std::string>temp_lookahead; // temporary lookahead stack
         bool finished = false;
+        bool found_lookahead = false;
         unsigned int this_iter = 0;
         unsigned int new_pointer_pos_t = nonterminal_set.pointer_pos+1;
+        if (from_source) {
+            new_pointer_pos_t = pointer_pos_counter+1;
+            nonterminal_set.pointer_pos = pointer_pos_counter;
+            pointer_pos_counter++;
+        }
         // set apropriate lookahead symbol for each single nonterminal set
         if (nonterminal_exists(nonterminal_set.derive))
         {
@@ -56,11 +80,12 @@ public:
                     if ('0' + new_pointer_pos_t == (int)table.second.back())
                     {
                         temp_lookahead.push_back(table.second);
+                        found_lookahead = true;
                     }
                 }
             }
         }
-        if ( nonterminal_exists(nonterminal_set.derive) == false ) // checks if the nonterminal is already 'registered'
+        if ( nonterminal_exists(nonterminal_set.derive) == false) // checks if the nonterminal is already 'registered'
         {
             nonterminal_id++;
             nonterminal_name_stack.push_back(nonterminal_set.derive);
@@ -72,6 +97,7 @@ public:
             if (nonterminal_set.production[i].type == Token::nonterminal && nonterminal_set.derive != nonterminal_set.production[i].value)
             {
                 bool found = false;
+                size_t _iter_ = 0;
                 std::string nonterminal_value = nonterminal_set.production[i].value;
 
                 for (unsigned int a = 0; a < CC_list.size(); a++)
@@ -80,7 +106,7 @@ public:
                     {
                         found = true;
                         bool appendable = false;
-                        unsigned int _iter_ = 0;
+                        _iter_ = 0;
                         unsigned int temp_nonterminal_id = nonterminal_id;
                         std::vector<std::string>temp_temp_lookahead; // note: shitty name
 
@@ -100,8 +126,7 @@ public:
 
                                     }
                                 }
-                        std::cout << last_nonterminal_id << std::endl;
-                        LR1Item temp1(CC_list[a].derive, CC_list[a].production, ":list", nonterminal_id, CC_list[a].pointer_pos+1);
+                        LR1Item temp1(nonterminal_set.derive, CC_list[a].production, ":list", nonterminal_id, CC_list[a].pointer_pos+1);
                         temp1.add_lookahead_list(temp_temp_lookahead);
 
                         temp_temp_lookahead.clear();
@@ -110,8 +135,9 @@ public:
                         Temp_CC_list.push_back(temp1);
                         }
                     }
-                    if ( not found ) ;
-                        report_error();
+                    if (not found)
+                    {
+                    }
                 }
 
             }
@@ -119,25 +145,67 @@ public:
         unsigned int new_pointer_pos = nonterminal_set.pointer_pos + 1 ;
         LR1Item temp(nonterminal_set.derive, nonterminal_set.production, ":list", nonterminal_id, new_pointer_pos);
         temp.add_lookahead_list(temp_lookahead);
-
         Temp_CC_list.push_back(temp);
         last_nonterminal_id = nonterminal_id;
+        if (from_source) { nonterminal_id++;}
+        if (not from_source) { pointer_pos_counter = nonterminal_set.pointer_pos + 1; }
+        last_pointer_pos = pointer_pos_counter;
+
     }
     void goto_()
     {
         for (unsigned int i = 0; i < CC_list.size(); i++)
         {
-            build_nonterminal(CC_list[i]);
+            build_nonterminal(CC_list[i], false);
+        }
+    }
+    void goto_2()
+    {
+        bool running = false; 
+        for (unsigned int x = 0; x < CC_list.size(); x++)
+        {
+            if (CC_list[x].list_id > 0)
+            {
+                running = true;
+                unsigned int temp_pointer_pos = CC_list[x].pointer_pos;
+                do 
+                {
+                    if (temp_pointer_pos == (CC_list[x].production.size() -1))
+                        running = false;
+                    build_nonterminal(CC_list[x], true);
+                    temp_pointer_pos++;
+                } while (running);
+            }
+            
         }
     }
     void build_CC_list()
     {
         goto_();
         // debug
+        for (unsigned int x = 0; x < Temp_CC_list.size(); x++)
+        {
+            for (unsigned int y = 0; y < Temp_CC_list[x].production.size(); y++)
+            {
+                if (Temp_CC_list[x].production[y].value == "<emp>")
+                {
+                    Temp_CC_list[x].production[y].value = "";
+                }
+            }
+        }
         for  (unsigned int vvx = 0; vvx < Temp_CC_list.size(); vvx++)
         {
             CC_list.push_back(Temp_CC_list[vvx]);
         }
+        Temp_CC_list.clear(); 
+        nonterminal_name_stack.clear();
+        nonterminal_id = last_nonterminal_id;
+        goto_2();
+        for (unsigned int vvx = 0; vvx < Temp_CC_list.size(); vvx++)
+        {
+            CC_list.push_back(Temp_CC_list[vvx]);
+        }
+
         for ( unsigned int xy = 0; xy < Lookahead_list.size(); xy++)
         {
             for (auto const& table: Lookahead_list[xy])
@@ -170,7 +238,6 @@ public:
             }
             std::cout << "\n" << std::endl;
 
-
         }
     }
     bool check_symbol(std::string symbol,unsigned int id_)
@@ -195,6 +262,7 @@ public:
                 if (stack[pos].productions[production_pos].type == Token::terminal && not run) {
                     run = true;
                     std::string index_numb_str = std::to_string(index_numb);
+                    if (stack[pos].productions[production_pos].value == "|") production_pos++;
                     std::map<std::string, std::string> temp_list =
                     {
                         {stack[pos].name, stack[pos].productions[production_pos].value+" "+index_numb_str}
@@ -206,22 +274,27 @@ public:
                         nonterminal_name_stack.push_back(stack[pos].name);
                         index_numb++;
                     }
+                   
                 }
                 do
                 {
-                    if (stack[pos].productions[production_pos+1].value == "|" || stack[pos].productions[production_pos+1].type == Token::end) 
+                    if (production_pos != (stack[pos].productions.size() - 1))
                     {
-                        index_numb = 1;
+                        if (stack[pos].productions[production_pos + 1].value == "|" || stack[pos].productions[production_pos + 1].type == Token::end)
+                        {
+                            index_numb = 1;
+                        }
                     }
-                    if (stack[pos].productions[production_pos].type == Token::terminal)
+                    if (stack[pos].productions[production_pos].type == Token::terminal) {
                         run = false;
-                    if (stack[pos].productions[production_pos].value == "|")
-                        run=false;
-                    else if (stack[pos].productions[production_pos].type == Token::end) {
-                        run=false;
                     }
-                    else
-                        production_pos++;
+                    if (stack[pos].productions[production_pos].value == "|") {
+                        run = false;
+                    }
+                    else if (stack[pos].productions[production_pos].type == Token::end) {
+                        run = false;
+                    }
+                    else;
                 } while (run);
             }
         }
@@ -276,6 +349,8 @@ public:
 
                         if (stack[pos].productions[root_pos].value == "|")
                         {
+                            if (iter == Lookahead_list.size())
+                                iter = iter - 1;
                             for (auto const& x : Lookahead_list[iter])
                             {
                                 lookahead_symbol = x.second;
@@ -289,6 +364,8 @@ public:
                         }
                         if (stack[pos].productions[root_pos].type == Token::end)
                         {
+                            if (iter == Lookahead_list.size())
+                                iter = iter - 1;
                             for (auto const& x : Lookahead_list[iter])
                             {
                                 lookahead_symbol = x.second;
@@ -303,17 +380,6 @@ public:
                 }
             }
         }
-       /* for (int i = 0; i < CC_list.size(); i++)
-        {
-           std::cout << "LOOKAHEAD = " << CC_list[i].look_ahead << std::endl;
-
-            for (int x = 0; x < CC_list[i].production.size(); x++) {
-                std::cout << CC_list[i].derive << CC_list[i].production[x].value << std::endl;
-
-                
-            }
-            std::cout << "\n";
-        } */
         build_CC_list();
     }
 
@@ -323,9 +389,9 @@ private:
     std::vector<std::map<std::string, std::string>>Lookahead_list;
     std::vector<std::string> FoundSymbols;
     std::vector<unsigned int> FoundSymbols_id;
-
     std::vector<LR1Item>CC_list; 
-    std::vector<LR1Item>Temp_CC_list; // provides temporary shelter for the CC_list's new members such as CC1 CC2 etc..
+    std::vector<LR1Item>Temp_CC_list; // provides temporary shelter for the CC_list's new members such as CC1 CC2 CC3 etc..
+
     unsigned int pos = 0;
 
 };
