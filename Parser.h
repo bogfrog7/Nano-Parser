@@ -17,11 +17,13 @@ static unsigned int nonterminal_id = 0; // used for both iterations
 static unsigned int last_nonterminal_id = 0; // used for both iterations
 static unsigned int last_pointer_pos = 0; // used for the second iteration
 static unsigned int pointer_pos_counter = 0; // used for the second iteration
+static unsigned int new_pointer_pos = 0; // used for the second iteration
+static unsigned int new_pointer_pos_t = 0; // used for both iterations
 
-class Parser
+class Nano
 {
 public:
-    Parser(std::vector<RootNonterminal>p_source)
+    Nano(std::vector<RootNonterminal>p_source)
         :stack(p_source)
     {
 
@@ -44,7 +46,7 @@ public:
         /* Explanation:
          * Consider the following nonterminal set a->*b | * [ b ] with a pointer pos of some signed integer w, ( represented as * )
          * Since the pointer pos is w, we need to increment the w so that it is exactly w+1 and we need to assign a 'label' which is
-         * also a signed integer that represents the CC(I) list format. The label will be assigned to the collection. The collection
+         * also a unsigned integer that represents the CC(I) list format. The label will be assigned to the collection. The collection
          * is currently [a->*b,s] and [[ *b,s]] (two differnet collections with the same label). For each production P, If P containts a nonterminal S with a lookahead symbol s
          * then all of S's productions will be cast into collections and labeled with the same label.
          *
@@ -55,17 +57,19 @@ public:
          * Params:
          * from_source -> if true, builds from existing nonterminal_id paramater such as last_nonterminal_id
          * nonterminal_set -> nonterminal_set::LR1Item
+         * 
+         * @from_source --> 
+         * Explanation:
+         * When from_source is set to true the behaivour of the algorithm changes. The algorithm now gives you the responsibilty to increment
+         * or decrement ceratin global variables. You are now responsible for most of the global variables. The from_source is set to true in
+         * the second iteration (goto_2) beacuse it builds the new nontermianl sets (NewCC(I)) from the previous CC(I) collection.
+         * 
          * */
         std::vector<std::string>temp_lookahead; // temporary lookahead stack
         bool finished = false;
-        bool found_lookahead = false;
-        unsigned int this_iter = 0;
-        unsigned int new_pointer_pos_t = nonterminal_set.pointer_pos+1;
-        if (from_source) {
-            new_pointer_pos_t = pointer_pos_counter+1;
-            nonterminal_set.pointer_pos = pointer_pos_counter;
-            pointer_pos_counter++;
-        }
+        bool found_lookahead = false; // if no lookaheads then error
+        unsigned int this_iter = 0; // counts the iteration number
+        if (not from_source) { new_pointer_pos_t = nonterminal_set.pointer_pos + 1; }
         // set apropriate lookahead symbol for each single nonterminal set
         if (nonterminal_exists(nonterminal_set.derive))
         {
@@ -142,12 +146,11 @@ public:
 
             }
         }
-        unsigned int new_pointer_pos = nonterminal_set.pointer_pos + 1 ;
+        if (not from_source){ new_pointer_pos = nonterminal_set.pointer_pos + 1; }
         LR1Item temp(nonterminal_set.derive, nonterminal_set.production, ":list", nonterminal_id, new_pointer_pos);
         temp.add_lookahead_list(temp_lookahead);
         Temp_CC_list.push_back(temp);
         last_nonterminal_id = nonterminal_id;
-        if (from_source) { nonterminal_id++;}
         if (not from_source) { pointer_pos_counter = nonterminal_set.pointer_pos + 1; }
         last_pointer_pos = pointer_pos_counter;
 
@@ -161,20 +164,65 @@ public:
     }
     void goto_2()
     {
+        std::vector<LR1Item>current_selection;
         bool running = false; 
+        unsigned int times = 0;
+        bool build = false;
+        std::string current_derive; 
         for (unsigned int x = 0; x < CC_list.size(); x++)
         {
             if (CC_list[x].list_id > 0)
             {
-                running = true;
-                unsigned int temp_pointer_pos = CC_list[x].pointer_pos;
+                bool name_in_stack = true;
+                current_derive = CC_list[x].derive;
                 do 
                 {
-                    if (temp_pointer_pos == (CC_list[x].production.size() -1))
-                        running = false;
-                    build_nonterminal(CC_list[x], true);
-                    temp_pointer_pos++;
-                } while (running);
+                    if (CC_list[x].derive != current_derive || x == (CC_list.size() - 1))
+                    {
+                        name_in_stack = false;
+                    }
+                    current_selection.push_back(CC_list[x]);
+                    x++;
+                    
+                } while (name_in_stack);
+                build = true; 
+            }
+            if (build)
+            {
+                running = true;
+                unsigned int temp_pointer_pos = current_selection[0].pointer_pos;
+                unsigned int current_id = current_selection[0].list_id;
+                for (unsigned int by = 0; by < current_selection.size(); by++)
+                {
+                    do
+                    {
+
+                        if (current_selection.size() > 1) 
+                        {
+                            for (unsigned int v = 0; v < current_selection.size(); v++)
+                            {
+
+                                build_nonterminal(current_selection[v], true);
+                            }
+                            temp_pointer_pos++;
+                            new_pointer_pos = nonterminal_id + 1;
+                            nonterminal_id++;
+                            new_pointer_pos_t = temp_pointer_pos + 1;
+                        }
+                        if (current_selection.size() == 1)
+                        {
+
+                            build_nonterminal(current_selection[by], true);
+                        }
+
+                        if (temp_pointer_pos == (current_selection[by].production.size() - 1))
+                        {
+                            running = false;
+                        }
+
+                    } while (running);
+                }
+                build = false;
             }
             
         }

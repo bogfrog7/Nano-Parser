@@ -5,7 +5,7 @@ class Token
 public:
 	Token()
 	{
-		
+		value = "NULL"; type = NULL;
 	}
 	Token(std::string pvalue, unsigned int ptype)
 	{
@@ -20,14 +20,12 @@ public:
 		equal, // =
 		undefined, // `
 		command, // some command
-		root_nonterminal,
-		end,
-		or_,
-		pointer,
+		root_nonterminal, // <root>
+		end, // end
+		or_, // |
+		pointer, // *
 		derives, // -> 
 		lookahead_symbol
-
 	};
-
-	std::string value ; unsigned int type ;
+	std::string value; unsigned int type;
 };

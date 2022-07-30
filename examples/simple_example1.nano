@@ -1,3 +1,6 @@
 #define <emp> " "
+#define <function_def> nano.key --> function_def
+#define <args> nano.key --> [args]
+#define <create_arg> nano.key() --> nano.function() // C
 
 <function_call> ::= [()] | [<name>()] -- end

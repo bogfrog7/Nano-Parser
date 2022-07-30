@@ -1,7 +1,11 @@
 #pragma once
 #include <iostream>
 #include <vector>
-
+/*
+* Docs For Utils written here
+* 
+* 
+*/
 class Error
 {
 	public:
@@ -20,7 +24,10 @@ static unsigned int error_count = 0;
 
 const char* c_error_types[] =
 {
-	"[404C]",
+	"[404C]", // failed to find command
+	"[304A]", // failed to define variable
+	"[349B]" // failed to valid definition
+	"[335A]" // definition not valid
 
 };
 
